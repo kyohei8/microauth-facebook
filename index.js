@@ -1,11 +1,38 @@
 const querystring = require('querystring');
 const url = require('url');
+const cookie = request('cookie');
 
 const rp = require('request-promise');
 const redirect = require('micro-redirect');
 const uuid = require('uuid');
 
 const provider = 'facebook';
+const fb_auth_state = 'R8VTm6asnf';
+
+function parseCookies(request) {
+  var list = {},
+    rc = request.headers.cookie;
+  console.log(rc);
+
+  rc &&
+    rc.split(';').forEach(function (cookie) {
+      var parts = cookie.split('=');
+      list[parts.shift().trim()] = decodeURI(parts.join('='));
+    });
+
+  return list;
+}
+
+function genCookies(key, val) {
+  // 1hour
+  const expiresIn = 60 * 60 * 1000;
+  const options = {
+    maxAge: expiresIn,
+    httpOnly: true
+  };
+  const c = cookie.serialize(key, val, options);
+}
+
 
 const microAuthFacebook = ({ appId, appSecret, fields = 'name,email,cover', callbackUrl, path = '/auth/facebook', scope = 'public_profile,email', apiVersion = '2.11' }) => {
 
@@ -31,6 +58,8 @@ const microAuthFacebook = ({ appId, appSecret, fields = 'name,email,cover', call
         const state = uuid.v4();
         const redirectUrl = getRedirectUrl(state);
         states.push(state);
+        const cookie = genCookies(fb_auth_state, states.join(','))
+        res.setHeader('Set-Cookie', cookie);
         return redirect(res, 302, redirectUrl);
       } catch (err) {
         args.push({ err, provider });
@@ -45,9 +74,14 @@ const microAuthFacebook = ({ appId, appSecret, fields = 'name,email,cover', call
         const { state, code } = querystring.parse(query);
 
         if (!states.includes(state)) {
-          const err = new Error('Invalid state');
-          args.push({ err, provider });
-          return fn(req, res, ...args);
+          // get state by cookies
+          const cookies = parseCookies(req);
+          const states = cookies[fb_auth_state];
+          if (!states.split(',').includes(state)) {
+            const err = new Error('Invalid state');
+            args.push({ err, provider });
+            return fn(req, res, ...args);
+          }
         }
 
         const response = await rp({
