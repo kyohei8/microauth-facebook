@@ -86,11 +86,9 @@ const microAuthFacebook = ({ appId, appSecret, fields = 'name,email,cover', call
         res.setHeader('Set-Cookie', delCookie);
 
         if (!states.includes(state)) {
-          console.log('states', cookies[fb_auth_state], state);
           // get state by cookies
           const states = cookies[fb_auth_state];
-          console.log('has states', states.split('%2C').includes(state));
-          if (!states.split('%2C').includes(state)) {
+          if (states && !states.split('%2C').includes(state)) {
             const err = new Error('Invalid state');
             args.push({ err, provider });
             return fn(req, res, ...args);
