@@ -32,6 +32,14 @@ function genCookies(key, val) {
   return cookie.serialize(key, val, options);
 }
 
+function deleteCookies(key) {
+  const expiresIn = 0;
+  const options = {
+    maxAge: expiresIn,
+    httpOnly: true
+  };
+  return cookie.serialize(key, '**', options);
+}
 
 const microAuthFacebook = ({ appId, appSecret, fields = 'name,email,cover', callbackUrl, path = '/auth/facebook', scope = 'public_profile,email', apiVersion = '2.11' }) => {
 
@@ -72,9 +80,13 @@ const microAuthFacebook = ({ appId, appSecret, fields = 'name,email,cover', call
       try {
         const { state, code } = querystring.parse(query);
 
+        const cookies = parseCookies(req);
+        // delete cookie
+        const delCookie = deleteCookies(fb_auth_state);
+        res.setHeader('Set-Cookie', delCookie);
+
         if (!states.includes(state)) {
           // get state by cookies
-          const cookies = parseCookies(req);
           const states = cookies[fb_auth_state];
           if (!states.split(',').includes(state)) {
             const err = new Error('Invalid state');
