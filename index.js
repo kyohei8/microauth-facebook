@@ -29,7 +29,7 @@ function genCookies(key, val) {
     maxAge: expiresIn,
     httpOnly: true
   };
-  const c = cookie.serialize(key, val, options);
+  return cookie.serialize(key, val, options);
 }
 
 
