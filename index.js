@@ -1,6 +1,6 @@
 const querystring = require('querystring');
 const url = require('url');
-const cookie = request('cookie');
+const cookie = require('cookie');
 
 const rp = require('request-promise');
 const redirect = require('micro-redirect');
