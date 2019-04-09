@@ -12,7 +12,6 @@ const fb_auth_state = 'R8VTm6asnf';
 function parseCookies(request) {
   var list = {},
     rc = request.headers.cookie;
-  console.log(rc);
 
   rc &&
     rc.split(';').forEach(function (cookie) {
